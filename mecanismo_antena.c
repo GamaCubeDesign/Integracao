@@ -1,3 +1,4 @@
+//gcc mecanismo_antena.c -o mecanismo -lwiringPi
 #include <stdio.h>
 #include <wiringPi.h>
 
