@@ -54,7 +54,7 @@ int main(){
             printf("AQUECEDOR -> %s\n", heater_state ? "LIGADO" : "DESLIGADO");
         }
 
-        write_json("/home/gama/controle_termico/health.json", sensor_ids, temps, MAX_SENSORS, vbus);
+        write_json("/home/gama/health_ct.json", sensor_ids, temps, MAX_SENSORS, vbus);
 
         sleep(SAMPLE_INTERVAL);
     }
