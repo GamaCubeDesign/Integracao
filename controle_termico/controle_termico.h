@@ -1,4 +1,5 @@
 // controle_termico.h
+// gcc -o controle_termico controle_termico.c -lm
 
 #ifndef CONTROLE_TERMICO_H
 #define CONTROLE_TERMICO_H
