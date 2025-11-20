@@ -1,3 +1,5 @@
+//gcc raspi_i2c_master.c -o i2c_master
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
