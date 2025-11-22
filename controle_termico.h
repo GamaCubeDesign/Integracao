@@ -19,7 +19,7 @@ extern int battery_count;
 #define MOSFET_GPIO_PIN 17
 
 // leituras (segundos)
-#define SAMPLE_INTERVAL 10
+#define SAMPLE_INTERVAL 30
 
 
 #define HEATER_ON_THRESHOLD   10.0   // liga abaixo de 10 
