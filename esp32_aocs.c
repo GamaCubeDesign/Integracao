@@ -1,4 +1,4 @@
-//gcc raspi_i2c_master.c -o i2c_master
+//gcc esp32_aocs.c -o esp32_aocs
 
 #include <stdio.h>
 #include <stdlib.h>
