@@ -1,0 +1,19 @@
+{
+  "time": "2025-8-2T18:50:00Z",
+  "sensors": {
+    "INA219": {
+      "voltage_V": 12.34,
+      "current_mA": 123.4,
+      "power_mW": 1523.2,
+      "shunt_voltage_mV": 75.2
+    },
+    "BMP180": {
+      "temperature_C": 25.6,
+      "pressure_hPa": 1013.2,
+      "altitude_m": 150.5
+    },
+    "DS18B20": {
+      "temperature_C": 26.1
+    }
+  }
+}
