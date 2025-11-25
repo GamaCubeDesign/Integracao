@@ -106,7 +106,7 @@ void ShutDownSystem(){
 
 
 void parseHealth(){
-    std::ifstream file("HealthData.json");
+    std::ifstream file("../data/HealthData.json");
     json j;
     file >> j;
 
@@ -193,8 +193,11 @@ void RemoveFile(const char *filename){
     }
 }
 void generateHealthData(){
-    //Falta adicionar a execução do código de OBC para gerar o .json
+    //Chamada do código de obc para gerar a health data, salvando o .json na pasta data
     
+    system("../healthdata > ../data/HealthData.json");
+
+
     if(verifyFile()){
         parseHealth();
         HealthFIFO = Enqueue(HealthFIFO, health);
