@@ -9,6 +9,8 @@
 #include <sys/ioctl.h>
 #include <math.h>
 
+#include <stdint.h>
+
 #define I2C_DEVICE "/dev/i2c-1"
 #define INA219_ADDR 0x40
 

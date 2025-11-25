@@ -218,7 +218,7 @@ void activateThermalControl(){
 
     if (pid == 0) {
         // Processo filho -> executa o outro programa
-        execl("./controletermico.o", "controletermico.o", NULL);
+        execl("../controletermico.o", "controletermico.o", NULL);
         perror("Erro ao executar thermal_program");
         exit(1); // garante que o filho não continue no pai
     }
