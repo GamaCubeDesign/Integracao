@@ -1,0 +1,8 @@
+{
+  "ina219_voltage_v": 0.000,
+  "temperatures_c": [
+    {"id": "28-000000000001", "temp_c": null},
+    {"id": "28-000000000002", "temp_c": null},
+    {"id": "28-000000000003", "temp_c": null}
+  ]
+}

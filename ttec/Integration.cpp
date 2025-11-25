@@ -106,15 +106,94 @@ void ShutDownSystem(){
 
 
 void parseHealth(){
-    std::ifstream file("../data/HealthData.json");
+    /*
+    std::ifstream file("../Data/HealthData.json");
+
+    if (!file.is_open()) {
+        std::cerr << "[ERRO] Não foi possível abrir ../Data/HealthData.json\n";
+        return;
+    }
+
     json j;
+
     file >> j;
+
+    std::cout << j.dump(4) << std::endl;
+
 
     health.batteryTemperature1 = j["temperatures_c"][0].value("temp_c", 0.0f);
     health.batteryTemperature2 = j["temperatures_c"][1].value("temp_c", 0.0f);
     health.temperatureOut      = j["temperatures_c"][2].value("temp_c", 0.0f);
     health.length = sizeof(health);
+
+    std::cout << "Valores após leitura:" << std::endl;
+    std::cout << "temp1 = " << health.batteryTemperature1 << std::endl;
+    std::cout << "temp2 = " << health.batteryTemperature2 << std::endl;
+    std::cout << "tempOut = " << health.temperatureOut << std::endl;
+    */
+
+    // É recomendado usar a constante global para consistência no caminho
+    std::ifstream file("../Data/HealthData.json"); // HealthFile é "../data/HealthData.json"
+
+    if (!file.is_open()) {
+        std::cerr << "[ERRO] Não foi possível abrir o arquivo de HealthData.json\n";
+        return;
+    }
+
+    json j;
+    try {
+        file >> j;
+    } catch (const json::parse_error& e) {
+        std::cerr << "[ERRO] Erro ao analisar o JSON: " << e.what() << "\n";
+        return;
+    }
+
+    std::cout << j.dump(4) << std::endl;
+    
+    // Ponteiro para o array de temperaturas
+    const json& temperatures = j["temperatures_c"];
+
+    if (temperatures.is_array() && temperatures.size() >= 3) {
+        
+        // --- Verificação do Temp 1 ---
+        // Verifica se o objeto existe e se o valor 'temp_c' não é null
+        if (temperatures[0].contains("temp_c") && !temperatures[0]["temp_c"].is_null()) {
+            health.batteryTemperature1 = temperatures[0].value("temp_c", 0.0f);
+        } else {
+            std::cerr << "[AVISO] Temperatura 1 é null ou ausente. Usando 0.0f.\n";
+            health.batteryTemperature1 = 0.0f; 
+        }
+
+        // --- Verificação do Temp 2 ---
+        if (temperatures[1].contains("temp_c") && !temperatures[1]["temp_c"].is_null()) {
+            health.batteryTemperature2 = temperatures[1].value("temp_c", 0.0f);
+        } else {
+            std::cerr << "[AVISO] Temperatura 2 é null ou ausente. Usando 0.0f.\n";
+            health.batteryTemperature2 = 0.0f; 
+        }
+        
+        // --- Verificação do Temp Out ---
+        if (temperatures[2].contains("temp_c") && !temperatures[2]["temp_c"].is_null()) {
+            health.temperatureOut = temperatures[2].value("temp_c", 0.0f);
+        } else {
+            std::cerr << "[AVISO] Temperatura Externa é null ou ausente. Usando 0.0f.\n";
+            health.temperatureOut = 0.0f;
+        }
+
+    } else {
+        std::cerr << "[ERRO] A estrutura 'temperatures_c' não é um array válido ou não tem tamanho suficiente.\n";
+        return;
+    }
+
+    health.length = sizeof(health);
+
+    std::cout << "Valores após leitura:" << std::endl;
+    std::cout << "temp1 = " << health.batteryTemperature1 << std::endl;
+    std::cout << "temp2 = " << health.batteryTemperature2 << std::endl;
+    std::cout << "tempOut = " << health.temperatureOut << std::endl;
 }
+
+
 
 
 void parseControle(){
@@ -126,7 +205,8 @@ void parseControle(){
     //thermalControlD.batteryTemperature2 = j["temperatures_c"][1].value("temp_c", 0.0f);
     //thermalControlD.temperatureOut      = j["temperatures_c"][2].value("temp_c", 0.0f);
 
-    controlD.length = sizeof(controlD);
+    // LENGHT TA DANDO ERRO 
+    //controlD.length = sizeof(controlD);
 }
 
 void parseImaging(){
@@ -160,16 +240,16 @@ void sendThermalControlData(){
 
 void sendControlData(){
     std::cout << "\nEnviando os dados de controle disponíveis.\n" << std::endl;
-    tx_send((uint8_t*)&controlD, controlD.length);
+    //tx_send((uint8_t*)&controlD, controlD.length);
     std::cout << "\nControl data sent.\n" << std::endl;
 }
 
 void SendImagingData(){
-    tx_send((uint8_t*)&imaging, imaging.length);
+    //leartx_send((uint8_t*)&imaging, imaging.length);
 }
 
 int verifyFile(){
-    std::string HFileName = "sensor_data.json";
+    std::string HFileName = "../Data/HealthData.json";
     std::string IFileName = "imaging_data.json";
     std::string TFileName = "thermalControl_data.json";
 
@@ -195,7 +275,9 @@ void RemoveFile(const char *filename){
 void generateHealthData(){
     //Chamada do código de obc para gerar a health data, salvando o .json na pasta data
     
-    system("../healthdata > ../data/HealthData.json");
+    system("../healthdata > ../Data/HealthData.json");
+    std::cout << "CÓDIGO DA HEALTH DATA EXECUTADO!" << std::endl;
+    std::cout << ".JSON SALVO NA PASTA DATA." << std::endl;
 
 
     if(verifyFile()){
@@ -218,7 +300,7 @@ void activateThermalControl(){
 
     if (pid == 0) {
         // Processo filho -> executa o outro programa
-        execl("../controletermico.o", "controletermico.o", NULL);
+        execl("../controle_termico", "controle_termico", NULL);
         perror("Erro ao executar thermal_program");
         exit(1); // garante que o filho não continue no pai
     }
@@ -306,15 +388,15 @@ void ShowFIFO(fila* f) {
 /*
 int main(){
 
-    activateThermalControl();
-    int i = 0;
+    initSubsystems();
 
-    for (int i = 0; i <= 50; i++) {
-    printf("[principal] Contador: %d\n", i);
-    fflush(stdout);
-    sleep(1);
-    }
+    generateHealthData();
+    
+    activateThermalControl();
+
+    sleep(10);
 
     deactivateThermalControl();
     return 0;
-}*/
+};
+*/
