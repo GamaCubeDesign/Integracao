@@ -27,6 +27,7 @@ typedef struct celula {
 void parseHealth();
 void parseImaging();
 void parseControle();
+void parseCTData();
 
 void sendHealthData();
 void SendImagingData();
@@ -34,6 +35,7 @@ void sendThermalControlData();
 void sendControlData();
 
 int verifyFile();
+int verifyFile2();
 void RemoveFile();
 void generateHealthData();
 
@@ -52,6 +54,7 @@ extern const char *ControlFile;
 extern const char *AISFile;
 
 extern bool run;
+extern bool run2;
 
 fila* CreateFIFO();
 fila* Enqueue(fila* f, healthData x);

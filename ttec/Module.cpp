@@ -5,27 +5,30 @@
 
 
 //Controle
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <fcntl.h>
+#include <termios.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
-#include <linux/i2c-dev.h>
-
-#define I2C_ADDR 0x12
-
-int i2c_open() {
-    int fd = open("/dev/i2c-1", O_RDWR);
+#include <fcntl.h>
+int serial_open(const char *port = "/dev/serial0", int baud = B115200) {
+    int fd = open(port, O_RDWR | O_NOCTTY | O_NDELAY);
     if (fd < 0) {
-        perror("Erro ao abrir /dev/i2c-1");
-        exit(1);
+        std::cout << "[ERRO] Falha ao abrir UART!" << std::endl;
+        return -1;
     }
 
-    if (ioctl(fd, I2C_SLAVE, I2C_ADDR) < 0) {
-        perror("Erro ao configurar I2C_SLAVE");
-        exit(1);
-    }
+    struct termios options;
+    tcgetattr(fd, &options);
+
+    cfsetispeed(&options, baud);
+    cfsetospeed(&options, baud);
+
+    options.c_cflag |= (CLOCAL | CREAD);   // permite leitura
+    options.c_cflag &= ~CSIZE;
+    options.c_cflag |= CS8;                // 8 bits
+    options.c_cflag &= ~PARENB;            // sem paridade
+    options.c_cflag &= ~CSTOPB;            // 1 stop bit
+    options.c_cflag &= ~CRTSCTS;           // sem controle de fluxo
+
+    tcsetattr(fd, TCSANOW, &options);
     return fd;
 }
 
@@ -172,6 +175,8 @@ void switchMECProtocol(){
 void switchImagingProtocol(){
 
 }
+
+/*
 void switchControlProtocol(){
     uint16_t vetor1 = 0;
     uint16_t vetor2 = 0;
@@ -261,6 +266,78 @@ void switchControlProtocol(){
             break;
     }
 }
+*/
+
+void switchControlProtocol() {
+    uint16_t vetor1 = 0, vetor2 = 0;
+
+    int fd = serial_open();  // <<< UART habilitado
+    if (fd < 0) return;
+
+    switch (gsPacket.operation) {
+
+        case SOLAR_VECTOR: {
+            std::cout << "\n[SOLAR_VECTOR]\n";
+
+            char cmd = '1';
+            write(fd, &cmd, 1);
+            std::cout << "[UART] Enviado comando: '1'\n";
+
+            sleep(1);
+            break;
+        }
+
+        case TWO_VECTORS: {
+            std::cout << "\n[TWO_VECTORS]\n";
+
+            vetor1 = ((uint16_t)gsPacket.vector1b << 8) | gsPacket.vector1;
+            vetor2 = ((uint16_t)gsPacket.vector2b << 8) | gsPacket.vector2;
+
+            uint8_t buf[5];
+            buf[0] = '2';
+            buf[1] = vetor1 & 0xFF;
+            buf[2] = vetor1 >> 8;
+            buf[3] = vetor2 & 0xFF;
+            buf[4] = vetor2 >> 8;
+
+            write(fd, buf, 5);
+            std::cout << "[UART] Enviado pacote 5 bytes → Modo TWO_VECTORS\n";
+            std::cout << "V1=" << vetor1 << "  V2=" << vetor2 << "\n";
+
+            sleep(1);
+            break;
+        }
+
+        case SUN_POINTING: {
+            std::cout << "\n[SUN_POINTING]\n";
+
+            char cmd = '3';
+            write(fd, &cmd, 1);
+            std::cout << "[UART] Enviado comando: '3'\n";
+
+            sleep(1);
+            break;
+        }
+
+        case STABILIZATION: {
+            std::cout << "\n[STABILIZATION]\n";
+
+            char cmd = '4';
+            write(fd, &cmd, 1);
+            std::cout << "[UART] Enviado comando: '4'\n";
+
+            sleep(1);
+            break;
+        }
+
+        default: {
+            std::cout << "[UART] Nenhum comando enviado\n";
+            break;
+        }
+    }
+
+    close(fd);
+}
 
 
 void switchStatusProtocol(){
@@ -297,6 +374,10 @@ void switchThermalProtocol(){
         case DEACTIVATE_THERMAL_CONTROL:
             std::cout << "\nDEACTIVATE THERMAL CONTROL\n" << std::endl;
             deactivateThermalControl();
+            break;
+        case SEND_CT_DATA:
+            std::cout << "\nSEND CT DATA\n" << std::endl;
+            sendThermalControlData();
             break;
         default:
         // ignora

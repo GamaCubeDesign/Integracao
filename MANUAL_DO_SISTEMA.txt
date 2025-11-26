@@ -1,0 +1,23 @@
+########## SISTEMA DO IARASAT ##########
+
+
+Passo 01:
+Vá até o diretório: cd Integracao/
+
+Passo02:
+Execute o Makefile que está na raiz do diretório
+Ele vai compilar os arquivos: healthdata.c | main_ct.c / controle_termico.c / controle_termico.h
+
+Esses arquivos compilados são necessário para o sistema de TT&C
+
+Passo 03:
+Vá até o diretório de ttec: cd ttec/
+
+Passo 04:
+Execute o Makefile da parte de ttec
+
+Passo 05:
+digite no terminal: sudo ./lora_app
+
+
+Agora o sistema está funcionando, se atente para os comandos da GroudStation!!!!

@@ -36,6 +36,8 @@ enum Operation : uint8_t {
     SUN_POINTING = 10,
     STABILIZATION = 11,
 
+    SEND_CT_DATA = 13,
+
 };
 
 

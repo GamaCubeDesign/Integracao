@@ -25,6 +25,7 @@ int ImagingDataCounter = 0;
 int ThermalControlDataCounter = 0;
 
 bool run = false;
+bool run2 = false;
 
 healthData health;
 imagingData imaging;
@@ -218,6 +219,67 @@ void parseImaging(){
     imaging.length = sizeof(imaging);
 }
 
+void parseCTData(){
+    std::ifstream file("../Data/HealthData.json"); // HealthFile é "../data/HealthData.json"
+
+    if (!file.is_open()) {
+        std::cerr << "[ERRO] Não foi possível abrir o arquivo de HealthData.json\n";
+        return;
+    }
+
+    json j;
+    try {
+        file >> j;
+    } catch (const json::parse_error& e) {
+        std::cerr << "[ERRO] Erro ao analisar o JSON: " << e.what() << "\n";
+        return;
+    }
+
+    std::cout << j.dump(4) << std::endl;
+    
+    // Ponteiro para o array de temperaturas
+    const json& temperatures = j["temperatures_c"];
+
+    if (temperatures.is_array() && temperatures.size() >= 3) {
+        
+        // --- Verificação do Temp 1 ---
+        // Verifica se o objeto existe e se o valor 'temp_c' não é null
+        if (temperatures[0].contains("temp_c") && !temperatures[0]["temp_c"].is_null()) {
+            health.batteryTemperature1 = temperatures[0].value("temp_c", 0.0f);
+        } else {
+            std::cerr << "[AVISO] Temperatura 1 é null ou ausente. Usando 0.0f.\n";
+            health.batteryTemperature1 = 0.0f; 
+        }
+
+        // --- Verificação do Temp 2 ---
+        if (temperatures[1].contains("temp_c") && !temperatures[1]["temp_c"].is_null()) {
+            health.batteryTemperature2 = temperatures[1].value("temp_c", 0.0f);
+        } else {
+            std::cerr << "[AVISO] Temperatura 2 é null ou ausente. Usando 0.0f.\n";
+            health.batteryTemperature2 = 0.0f; 
+        }
+        
+        // --- Verificação do Temp Out ---
+        if (temperatures[2].contains("temp_c") && !temperatures[2]["temp_c"].is_null()) {
+            health.temperatureOut = temperatures[2].value("temp_c", 0.0f);
+        } else {
+            std::cerr << "[AVISO] Temperatura Externa é null ou ausente. Usando 0.0f.\n";
+            health.temperatureOut = 0.0f;
+        }
+
+    } else {
+        std::cerr << "[ERRO] A estrutura 'temperatures_c' não é um array válido ou não tem tamanho suficiente.\n";
+        return;
+    }
+
+    health.length = sizeof(health);
+
+    std::cout << "Valores após leitura:" << std::endl;
+    std::cout << "temp1 = " << health.batteryTemperature1 << std::endl;
+    std::cout << "temp2 = " << health.batteryTemperature2 << std::endl;
+    std::cout << "tempOut = " << health.temperatureOut << std::endl;
+}
+
 
 void sendHealthData(){
     std::cout << "\nEnviando todos os pacotes.\n" << std::endl;
@@ -233,9 +295,30 @@ void sendHealthData(){
 }
 
 void sendThermalControlData(){
-    std::cout << "\nEnviando os dados de controle térmico disponíveis.\n" << std::endl;
-    //tx_send((uint8_t*)&thermalControlD, thermalControlD.length);
-    std::cout << "\nThermal control data sent.\n" << std::endl;
+    std::cout << "\nEnviando os dados de controle térmico.\n" << std::endl;
+
+    if(verifyFile()){
+            parseCTData();
+            tx_send((uint8_t*)&health, health.length);
+            std::cout << "\nThermal control data sent.\n" << std::endl;
+    }else{
+        std::cout << "CT data file not found." << std::endl;
+    }
+/*
+    while(run2){
+
+        if(verifyFile()){
+            parseCTData();
+            tx_send((uint8_t*)&health, health.length);
+            std::cout << "\nThermal control data sent.\n" << std::endl;
+        
+    } else {
+        std::cout << "CT data file not found." << std::endl;
+    }
+        
+    sleep(10); // Envia a cada 10 segundos
+    }
+    */
 }
 
 void sendControlData(){
@@ -251,7 +334,7 @@ void SendImagingData(){
 int verifyFile(){
     std::string HFileName = "../Data/HealthData.json";
     std::string IFileName = "imaging_data.json";
-    std::string TFileName = "thermalControl_data.json";
+    std::string TFileName = "../Data/health_ct.json";
 
     FILE *file = fopen(HFileName.c_str(), "r"); 
 
@@ -264,6 +347,24 @@ int verifyFile(){
         return 0;
     }
 }
+
+int verifyFile2(){
+    std::string HFileName = "../Data/HealthData.json";
+    std::string IFileName = "imaging_data.json";
+    std::string TFileName = "../Data/health_ct.json";
+
+    FILE *file = fopen(TFileName.c_str(), "r"); 
+
+    if (file != NULL) {
+        std::cout << "The file exists\n\n";
+        std::fclose(file);
+        return 1;
+    }else {
+        std::cout << "The file does not exist\n";
+        return 0;
+    }
+}
+
 
 void RemoveFile(const char *filename){
     if(remove(filename) == 0){
